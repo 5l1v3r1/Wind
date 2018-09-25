@@ -14,6 +14,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.JPopupMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JFileChooser;
+
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableModel;
@@ -30,6 +32,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyAdapter;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,6 +68,7 @@ public class WindMainPanel {
         Point point = GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();
         int DIALOG_WHITE = 600;
         int DIALOG_HEIGHT = 400;
+
 
         JFrame uiMainFrame= new JFrame("Wind");
         uiMainFrame.setContentPane(uiMainPanel);
@@ -198,12 +204,22 @@ public class WindMainPanel {
 
                     reportOption.addActionListener(evt ->
                             {
-                                int input = JOptionPane.showConfirmDialog(null,
-                                        "Are you sure to delete this item?",
-                                        "Notice",
-                                        JOptionPane.YES_NO_OPTION,
-                                        JOptionPane.QUESTION_MESSAGE);
-                                System.out.println(input);
+                                JFileChooser chooser = new JFileChooser();
+                                int reportSelectOpt = chooser.showSaveDialog(null);
+                                if(reportSelectOpt==JFileChooser.APPROVE_OPTION){
+                                    File reportFile = chooser.getSelectedFile();
+                                    try {
+                                        FileOutputStream fos = new FileOutputStream(reportFile);
+                                        int allTableRow = uiResultTable.getRowCount();
+                                        for(int tableRow=0; tableRow<allTableRow; tableRow++) {
+                                            String tmpValue = uiResultTable.getModel().getValueAt(tableRow,1).toString();
+                                            fos.write((tmpValue + "\n").getBytes());
+                                        }
+                                        fos.close();
+                                    } catch (IOException reportSaveError) {
+                                        reportSaveError.printStackTrace();
+                                    }
+                                }
                             }
                     );
                     // 右键菜单样式
@@ -341,12 +357,12 @@ public class WindMainPanel {
                                     if (uiStartButton.getText().equals("Start")) {
                                         executor.shutdownNow();
                                         while (semaphore.hasQueuedThreads()) {
-                                            Thread.sleep(7000);
+                                            Thread.sleep(5000);
                                         }
                                         uiNowScanLabel.setText(null);
                                         break;
                                     }
-                                    Thread.sleep(5000);
+                                    Thread.sleep(1000);
                                 } catch (InterruptedException timeSleepError) {
                                     timeSleepError.printStackTrace();
                                 }
